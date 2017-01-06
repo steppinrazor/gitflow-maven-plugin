@@ -56,6 +56,15 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
     @Parameter(property = "featureSquash", defaultValue = "false")
     private boolean featureSquash = false;
 
+    /**
+     * Whether to squash feature branch commits into a single commit upon
+     * merging.
+     *
+     * @since 1.2.4
+     */
+    @Parameter(property = "ffwdMerge", defaultValue = "true")
+    private boolean ffwdMerge = true;
+
     /** {@inheritDoc} */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -122,8 +131,10 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             if (featureSquash) {
                 // git merge --squash feature/...
                 gitMergeSquash(featureBranchName);
-                gitCommit(featureBranchName);
-            } else {
+                //gitCommit(featureBranchName);
+            } else if (ffwdMerge){
+                gitMerge(featureBranchName, false, false);
+            }else {
                 // git merge --no-ff feature/...
                 gitMergeNoff(featureBranchName);
             }
@@ -142,8 +153,10 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 mvnSetVersions(version);
 
                 // git commit -a -m updating versions for development branch
-                gitCommit(commitMessages.getFeatureFinishMessage());
+                //gitCommit(commitMessages.getFeatureFinishMessage());
             }
+
+            gitCommit(featureBranchName);
 
             if (installProject) {
                 // mvn clean install
