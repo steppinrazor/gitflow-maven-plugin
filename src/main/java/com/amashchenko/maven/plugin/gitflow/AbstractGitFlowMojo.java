@@ -115,8 +115,8 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      * 
      * @since 1.0.7
      */
-    @Parameter(property = "verbose", defaultValue = "false")
-    private boolean verbose = false;
+    @Parameter(property = "verbose", defaultValue = "true")
+    private boolean verbose = true;
 
     /**
      * The path to the Maven executable. Defaults to "mvn".

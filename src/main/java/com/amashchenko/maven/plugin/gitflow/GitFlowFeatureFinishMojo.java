@@ -156,7 +156,13 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 //gitCommit(commitMessages.getFeatureFinishMessage());
             }
 
-            gitCommit(featureBranchName);
+            try {
+                gitCommit(featureBranchName);
+            }catch (MojoFailureException e){
+                if(!e.getMessage().contains("nothing to commit")){
+                    throw e;
+                }
+            }
 
             if (installProject) {
                 // mvn clean install
