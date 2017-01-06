@@ -44,6 +44,15 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
     @Parameter(property = "skipFeatureVersion", defaultValue = "false")
     private boolean skipFeatureVersion = false;
 
+    /**
+     * Whether feature already in progress and use the uncommitted changes to start new branch. Default is <code>false</code>
+     * (the feature name will be appended to project version).
+     *
+     * @since 1.3.2
+     */
+    @Parameter(property = "featureInProgress", defaultValue = "false")
+    private boolean featureInProgress = false;
+
     /** {@inheritDoc} */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -51,11 +60,13 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
             // set git flow configuration
             initGitFlowConfig();
 
-            // check uncommitted changes
-            checkUncommittedChanges();
+            if(!featureInProgress) {
+                // check uncommitted changes
+                checkUncommittedChanges();
+            }
 
             // fetch and check remote
-            if (fetchRemote) {
+            if (!featureInProgress && fetchRemote) {
                 gitFetchRemoteAndCompare(gitFlowConfig.getDevelopmentBranch());
             }
 

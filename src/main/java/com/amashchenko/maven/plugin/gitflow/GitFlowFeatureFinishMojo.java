@@ -60,7 +60,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
      * Whether to squash feature branch commits into a single commit upon
      * merging.
      *
-     * @since 1.2.4
+     * @since 1.3.2
      */
     @Parameter(property = "ffwdMerge", defaultValue = "true")
     private boolean ffwdMerge = true;
