@@ -214,7 +214,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Checking for uncommitted changes.");
         if (executeGitHasUncommitted()) {
             throw new MojoFailureException(
-                    "You have some uncommitted files. Commit or discard local changes in order to proceed.");
+                    "You have some uncommitted files. Commit, discard local changes or set -DfeatureInProgress in order to proceed.");
         }
     }
 
