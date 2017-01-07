@@ -108,7 +108,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      * @since 1.3.0
      */
     @Parameter(property = "pushRemote", defaultValue = "true")
-    protected boolean pushRemote;
+    protected boolean pushRemote = true;
 
     /**
      * Whether to print commands output into the console.
@@ -594,7 +594,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
                         + gitFlowConfig.getOrigin() + "'.");
 
         if (pushTags) {
-            executeGitCommand("push", "--quiet", "--follow-tags",
+            executeGitCommand("push", "--quiet", "--tags",
                     gitFlowConfig.getOrigin(), branchName);
         } else {
             executeGitCommand("push", "--quiet", gitFlowConfig.getOrigin(),

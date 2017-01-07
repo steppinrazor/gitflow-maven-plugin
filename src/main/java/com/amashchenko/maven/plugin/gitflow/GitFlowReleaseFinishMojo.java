@@ -114,7 +114,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
 
             //gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
             gitMergeSquash(releaseBranch);
-
+            gitCommit("Merge in release changes");
             // get current project version from pom
             final String currentVersion = getCurrentProjectVersion();
 
