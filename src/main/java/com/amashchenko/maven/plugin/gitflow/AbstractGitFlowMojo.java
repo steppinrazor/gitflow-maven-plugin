@@ -24,6 +24,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -321,6 +322,11 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeGitCommandExitCode("config", name, value);
     }
 
+    protected String checkIfChange(final String branch0, final String branch1) throws MojoFailureException,
+            CommandLineException{
+        return executeGitCommandReturn("diff", "--name-status", branch0, "..", branch1);
+    }
+
     /**
      * Executes git for-each-ref with <code>refname:short</code> format.
      * 
@@ -503,9 +509,10 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      */
     protected void gitBranchDelete(final String branchName)
             throws MojoFailureException, CommandLineException {
-        getLog().info("Deleting '" + branchName + "' branch.");
+        getLog().info("Deleting '" + branchName + "' branch and remote");
 
         executeGitCommand("branch", "-d", branchName);
+        executeGitCommand("push", "origin", "--delete", branchName);
     }
 
     /**
@@ -518,9 +525,10 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      */
     protected void gitBranchDeleteForce(final String branchName)
             throws MojoFailureException, CommandLineException {
-        getLog().info("Deleting (-D) '" + branchName + "' branch.");
+        getLog().info("Deleting (-D) '" + branchName + "' branch and remote");
 
         executeGitCommand("branch", "-D", branchName);
+        executeGitCommand("push", "origin", "--delete", branchName);
     }
 
     /**
