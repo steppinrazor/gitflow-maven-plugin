@@ -112,7 +112,8 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             // git checkout master
             gitCheckout(gitFlowConfig.getProductionBranch());
 
-            gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
+            //gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
+            gitMergeSquash(releaseBranch);
 
             // get current project version from pom
             final String currentVersion = getCurrentProjectVersion();
@@ -124,6 +125,8 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
                             + Artifact.SNAPSHOT_VERSION, "");
                 }
 
+                gitCheckout(releaseBranch);
+                tagVersion = getCurrentProjectVersion();
                 // git tag -a ...
                 gitTag(gitFlowConfig.getVersionTagPrefix() + tagVersion,
                         commitMessages.getTagReleaseMessage());
