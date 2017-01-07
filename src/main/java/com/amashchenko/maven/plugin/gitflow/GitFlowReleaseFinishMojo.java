@@ -112,9 +112,8 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             // git checkout master
             gitCheckout(gitFlowConfig.getProductionBranch());
 
-            //gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
-            gitMergeSquash(releaseBranch);
-            gitCommit("Merge in release changes");
+            gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
+            gitCommit(commitMessages.getReleaseFinishMessage());
             // get current project version from pom
             final String currentVersion = getCurrentProjectVersion();
 
@@ -172,7 +171,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
 
             if (!keepBranch) {
                 // git branch -d release/...
-                gitBranchDelete(releaseBranch);
+                gitBranchDeleteForce(releaseBranch);
             }
 
             if (pushRemote) {
