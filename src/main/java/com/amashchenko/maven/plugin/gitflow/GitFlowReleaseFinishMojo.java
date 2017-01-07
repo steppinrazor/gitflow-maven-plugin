@@ -139,9 +139,9 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
                 gitMerge(releaseBranch, releaseRebase, releaseMergeNoFF);
             }
 
-            getLog().info("what changed in log " + checkIfChange(releaseBranch, gitFlowConfig.getDevelopmentBranch()));
+            gitCheckout(gitFlowConfig.getProductionBranch());
 
-            /*String nextSnapshotVersion = null;
+            String nextSnapshotVersion = null;
             // get next snapshot version
             try {
                 final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
@@ -160,7 +160,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             }
 
             // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
-            mvnSetVersions(nextSnapshotVersion);*/
+            mvnSetVersions(nextSnapshotVersion);
 
             // git commit -a -m updating for next development version
             gitCommit(commitMessages.getReleaseFinishMessage());

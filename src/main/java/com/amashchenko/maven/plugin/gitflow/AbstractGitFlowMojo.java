@@ -603,6 +603,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         }
     }
 
+    protected void gitPushTrack(final String branchName)
+            throws MojoFailureException, CommandLineException {
+        getLog().info(
+                "Pushing '" + branchName + "' branch" + " to '"
+                        + gitFlowConfig.getOrigin() + "'.");
+        executeGitCommand("push", gitFlowConfig.getOrigin(), "-u", branchName);
+    }
+
     /**
      * Executes 'set' goal of versions-maven-plugin or 'set-version' of
      * tycho-versions-plugin in case it is tycho build.

@@ -152,7 +152,7 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 //mvnCleanInstall();
             }
             if(pushRemote){
-                gitPush(branchName, false);
+                gitPushTrack(branchName);
                 gitPush(gitFlowConfig.getDevelopmentBranch(), false);
             }
             gitCheckout(releaseBranch);

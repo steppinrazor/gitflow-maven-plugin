@@ -127,7 +127,7 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
                 mvnCleanInstall();
             }
             if(pushRemote){
-                gitPush(gitFlowConfig.getFeatureBranchPrefix() + featureName, false);
+                gitPushTrack(gitFlowConfig.getFeatureBranchPrefix() + featureName);
             }
         } catch (CommandLineException e) {
             getLog().error(e);
