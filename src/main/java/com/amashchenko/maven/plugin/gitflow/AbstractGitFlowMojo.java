@@ -24,7 +24,6 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -606,7 +605,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitPushTrack(final String branchName)
             throws MojoFailureException, CommandLineException {
         getLog().info(
-                "Pushing '" + branchName + "' branch" + " to '"
+                "Pushing (tracking) '" + branchName + "' branch" + " to '"
                         + gitFlowConfig.getOrigin() + "'.");
         executeGitCommand("push", gitFlowConfig.getOrigin(), "-u", branchName);
     }
@@ -737,16 +736,11 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             throws CommandLineException, MojoFailureException {
         // initialize executables
         initExecutables();
-
-        if (getLog().isDebugEnabled()) {
-            getLog().debug(
-                    cmd.getExecutable() + " " + StringUtils.join(args, " "));
-        }
-
+        getLog().info(cmd.getExecutable() + " " + StringUtils.join(args, " "));
         cmd.clearArgs();
         cmd.addArguments(args);
 
-        final StringBufferStreamConsumer out = new StringBufferStreamConsumer(
+        final StringBuilderStreamConsumer out = new StringBuilderStreamConsumer(
                 verbose);
 
         final CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
