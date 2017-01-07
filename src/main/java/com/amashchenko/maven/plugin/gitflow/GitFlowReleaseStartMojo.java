@@ -123,8 +123,6 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 } catch (PrompterException e) {
                     getLog().error(e);
                 }
-            } else {
-                version = releaseVersion;
             }
 
             if (StringUtils.isBlank(version)) {
@@ -149,9 +147,39 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 gitCommit(commitMessages.getReleaseStartMessage());
             }
 
+            //######## SET NEW SNAPSHOT ON MASTER ######
+                gitCheckout(gitFlowConfig.getDevelopmentBranch());
+
+                String nextSnapshotVersion = null;
+                // get next snapshot version
+                try {
+                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
+                            version);
+                    nextSnapshotVersion = versionInfo.getNextVersion()
+                            .getSnapshotVersionString();
+                } catch (VersionParseException e) {
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug(e);
+                    }
+                }
+
+                if (StringUtils.isBlank(nextSnapshotVersion)) {
+                    throw new MojoFailureException(
+                            "Next snapshot version is blank.");
+                }
+
+                // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
+                mvnSetVersions(nextSnapshotVersion);
+            gitCommit(commitMessages.getReleaseStartMessage());
+            //#########
+
             if (installProject) {
                 // mvn clean install
-                mvnCleanInstall();
+                //mvnCleanInstall();
+            }
+            if(pushRemote){
+                gitPush(branchName, false);
+                gitPush(gitFlowConfig.getDevelopmentBranch(), false);
             }
         } catch (CommandLineException e) {
             getLog().error(e);
