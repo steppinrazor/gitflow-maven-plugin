@@ -17,32 +17,32 @@ package com.amashchenko.maven.plugin.gitflow;
 
 import org.codehaus.plexus.util.cli.StreamConsumer;
 
-public class StringBufferStreamConsumer implements StreamConsumer {
-    private static final String LS = System.getProperty("line.separator");
+public class StringBuilderStreamConsumer implements StreamConsumer {
+    private static final String LS = System.getProperty("line.separator"), TAG = "[Stream] ";
 
-    private final StringBuffer buffer;
+    private final StringBuilder builder;
 
     private final boolean printOut;
 
-    public StringBufferStreamConsumer() {
+    public StringBuilderStreamConsumer() {
         this(false);
     }
 
-    public StringBufferStreamConsumer(boolean printOut) {
-        this.buffer = new StringBuffer();
+    public StringBuilderStreamConsumer(boolean printOut) {
+        this.builder = new StringBuilder();
         this.printOut = printOut;
     }
 
     @Override
     public void consumeLine(String line) {
         if (printOut) {
-            System.out.println(line);
+            System.out.println(TAG + line);
         }
 
-        buffer.append(line).append(LS);
+        builder.append(line).append(LS);
     }
 
     public String getOutput() {
-        return buffer.toString();
+        return builder.toString();
     }
 }
