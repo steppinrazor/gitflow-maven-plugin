@@ -131,12 +131,13 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             if (featureSquash) {
                 // git merge --squash feature/...
                 gitMergeSquash(featureBranchName);
-                //gitCommit(featureBranchName);
+                gitCommit(featureBranchName);
             } else if (ffwdMerge){
                 gitMerge(featureBranchName, false, false);
             }else {
                 // git merge --no-ff feature/...
                 gitMergeNoff(featureBranchName);
+                gitCommit(featureBranchName);
             }
 
             // get current project version from pom
@@ -153,15 +154,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 mvnSetVersions(version);
 
                 // git commit -a -m updating versions for development branch
-                //gitCommit(commitMessages.getFeatureFinishMessage());
-            }
-
-            try {
-                gitCommit(featureBranchName);
-            }catch (MojoFailureException e){
-                if(!e.getMessage().contains("nothing to commit")){
-                    throw e;
-                }
+                gitCommit(commitMessages.getFeatureFinishMessage());
             }
 
             if (installProject) {
