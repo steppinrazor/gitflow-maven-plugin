@@ -107,9 +107,7 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
                     version = versionInfo.getReleaseVersionString() + "-"
                             + featureName + "-" + Artifact.SNAPSHOT_VERSION;
                 } catch (VersionParseException e) {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug(e);
-                    }
+                        getLog().error(e);
                 }
 
                 if (StringUtils.isNotBlank(version)) {

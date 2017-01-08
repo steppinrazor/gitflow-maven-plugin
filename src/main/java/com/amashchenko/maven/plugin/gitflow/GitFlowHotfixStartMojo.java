@@ -26,6 +26,9 @@ import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The git flow hotfix start mojo.
  * 
@@ -45,33 +48,52 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
             // check uncommitted changes
             checkUncommittedChanges();
 
-            // need to be in master to get correct project version
-            // git checkout master
-            gitCheckout(gitFlowConfig.getProductionBranch());
+            final String hotfixTags = gitFindTags(gitFlowConfig.getVersionTagPrefix());
 
-            // fetch and check remote
-            if (fetchRemote) {
-                gitFetchRemoteAndCompare(gitFlowConfig.getProductionBranch());
+            if (StringUtils.isBlank(hotfixTags)) {
+                throw new MojoFailureException("There are not tags that fit pattern " + gitFlowConfig.getVersionTagPrefix() + "*");
             }
 
-            // get current project version from pom
-            final String currentVersion = getCurrentProjectVersion();
+            final String[] tags = hotfixTags.split("\\r?\\n");
+
+            List<String> numberedList = new ArrayList<>();
+            StringBuilder str = new StringBuilder("Release Tags:")
+                    .append(LS);
+            for (int i = 0; i < tags.length; i++) {
+                str.append((i + 1) + ". " + tags[i] + LS);
+                numberedList.add(String.valueOf(i + 1));
+            }
+            str.append("Choose tag to create hotfix:");
+
+            String tagChoice = null;
+            try {
+                while (StringUtils.isBlank(tagChoice)) {
+                    tagChoice = prompter.prompt(str.toString(),
+                            numberedList);
+                }
+            } catch (PrompterException e) {
+                getLog().error(e);
+            }
+
+            String tagName = null;
+            if (tagChoice != null) {
+                int num = Integer.parseInt(tagChoice);
+                tagName = tags[num - 1];
+            }
+
+            if (StringUtils.isBlank(tagName)) {
+                throw new MojoFailureException(
+                        "Tag name to create hotfix is empty.");
+            }
+
+            String tagNameWoPrefix = tagName.replace(gitFlowConfig.getVersionTagPrefix(), "");
 
             String defaultVersion = null;
-            // get default hotfix version
             try {
-                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
-                        currentVersion);
-                defaultVersion = versionInfo.getNextVersion()
-                        .getReleaseVersionString();
-
-                if (tychoBuild && ArtifactUtils.isSnapshot(currentVersion)) {
-                    defaultVersion += "-" + Artifact.SNAPSHOT_VERSION;
-                }
+                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(tagNameWoPrefix);
+                defaultVersion = versionInfo.getNextVersion().getReleaseVersionString();
             } catch (VersionParseException e) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug(e);
-                }
+                getLog().error(e);
             }
 
             if (defaultVersion == null) {
@@ -100,18 +122,14 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
                         "Hotfix branch with that name already exists. Cannot start hotfix.");
             }
 
-            // git checkout -b hotfix/... master
-            gitCreateAndCheckout(gitFlowConfig.getHotfixBranchPrefix()
-                    + version, gitFlowConfig.getProductionBranch());
+            gitCheckoutTag(gitFlowConfig.getHotfixBranchPrefix() + version, tagName);
 
-            // execute if version changed
-            if (!version.equals(currentVersion)) {
-                // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
-                mvnSetVersions(version);
+            gitPushTrack(gitFlowConfig.getHotfixBranchPrefix() + version);
 
-                // git commit -a -m updating versions for hotfix
-                gitCommit(commitMessages.getHotfixStartMessage());
-            }
+            mvnSetVersions(version);
+
+            // git commit -a -m updating versions for hotfix
+            gitCommit(commitMessages.getHotfixStartMessage());
 
             if (installProject) {
                 // mvn clean install

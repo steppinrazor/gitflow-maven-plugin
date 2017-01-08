@@ -20,7 +20,7 @@ import org.codehaus.plexus.util.cli.StreamConsumer;
 public class StringBuilderStreamConsumer implements StreamConsumer {
     private static final String LS = System.getProperty("line.separator"), TAG = "[Stream] ";
 
-    private final StringBuilder builder;
+    private final StringBuilder builder = new StringBuilder();
 
     private final boolean printOut;
 
@@ -29,7 +29,6 @@ public class StringBuilderStreamConsumer implements StreamConsumer {
     }
 
     public StringBuilderStreamConsumer(boolean printOut) {
-        this.builder = new StringBuilder();
         this.printOut = printOut;
     }
 

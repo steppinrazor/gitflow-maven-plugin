@@ -361,6 +361,22 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         return branches;
     }
 
+    protected String gitFindTags(final String tagPrefix) throws MojoFailureException,
+            CommandLineException {
+        String tags = executeGitCommandReturn("for-each-ref",
+                    "--format=\"%(refname:short)\"", "refs/tags/" + tagPrefix + "*");
+
+
+        // on *nix systems return values from git for-each-ref are wrapped in
+        // quotes
+        // https://github.com/aleksandr-m/gitflow-maven-plugin/issues/3
+        if (tags != null && !tags.isEmpty()) {
+            tags = tags.replaceAll("\"", "");
+        }
+
+        return tags;
+    }
+
     /**
      * Checks if local branch with given name exists.
      * 
@@ -391,6 +407,13 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Checking out '" + branchName + "' branch.");
 
         executeGitCommand("checkout", branchName);
+    }
+
+    protected void gitCheckoutTag(final String featureBranchName, final String tagName)
+            throws MojoFailureException, CommandLineException {
+        getLog().info("Checking out '" + tagName + "' tag.");
+
+        executeGitCommand("checkout -b", featureBranchName, tagName);
     }
 
     /**

@@ -126,6 +126,8 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             gitMergeNoff(hotfixBranchName);
 
             if (!skipTag) {
+                gitCheckout(hotfixBranchName);
+
                 String tagVersion = getCurrentProjectVersion();
                 if (tychoBuild && ArtifactUtils.isSnapshot(tagVersion)) {
                     tagVersion = tagVersion.replace("-"
@@ -149,7 +151,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitCheckout(releaseBranch);
                 // git merge --no-ff hotfix/...
                 gitMergeNoff(hotfixBranchName);
-            } else {
+            } /*else {
                 if (notSameProdDevName()) {
                     // git checkout develop
                     gitCheckout(gitFlowConfig.getDevelopmentBranch());
@@ -184,12 +186,16 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
 
                 // git commit -a -m updating for next development version
                 gitCommit(commitMessages.getHotfixFinishMessage());
-            }
+            }*/
+
+            gitCheckout(hotfixBranchName);
 
             if (installProject) {
                 // mvn clean install
                 mvnCleanInstall();
             }
+
+            gitCheckout(gitFlowConfig.getProductionBranch());
 
             if (!keepBranch) {
                 // git branch -d hotfix/...
@@ -200,8 +206,8 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitPush(gitFlowConfig.getProductionBranch(), !skipTag);
 
                 // if no release branch
-                if (StringUtils.isBlank(releaseBranch) && notSameProdDevName()) {
-                    gitPush(gitFlowConfig.getDevelopmentBranch(), !skipTag);
+                if (StringUtils.isBlank(releaseBranch)) {
+                    gitPush(releaseBranch, !skipTag);
                 }
             }
         } catch (CommandLineException e) {
