@@ -413,7 +413,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             throws MojoFailureException, CommandLineException {
         getLog().info("Checking out '" + tagName + "' tag.");
 
-        executeGitCommand("checkout -b", featureBranchName, tagName);
+        executeGitCommand("checkout", "-b", featureBranchName, tagName);
     }
 
     /**
@@ -620,7 +620,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             executeGitCommand("push", "--quiet", "--tags",
                     gitFlowConfig.getOrigin(), branchName);
         } else {
-            executeGitCommand("push --quiet", gitFlowConfig.getOrigin(),
+            executeGitCommand("push", "--quiet", gitFlowConfig.getOrigin(),
                     branchName);
         }
     }
@@ -681,14 +681,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             CommandLineException {
         getLog().info("Cleaning and installing the project.");
 
-        executeMvnCommand("clean install");
+        executeMvnCommand("clean", "install");
     }
 
     protected void mvnCleanDeploy() throws MojoFailureException,
             CommandLineException {
         getLog().info("Cleaning and installing the project.");
 
-        executeMvnCommand("clean deploy");
+        executeMvnCommand("clean", "deploy");
     }
 
 

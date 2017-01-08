@@ -87,6 +87,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
             }
 
             String tagNameWoPrefix = tagName.replace(gitFlowConfig.getVersionTagPrefix(), "");
+            getLog().info("Tag name without prefix = " + tagNameWoPrefix);
 
             String defaultVersion = null;
             try {
