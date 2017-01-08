@@ -119,14 +119,8 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 mvnCleanTest();
             }
 
-            // git checkout master
-            gitCheckout(gitFlowConfig.getProductionBranch());
-
-            // git merge --no-ff hotfix/...
-            gitMergeNoff(hotfixBranchName);
-
             if (!skipTag) {
-                gitCheckout(hotfixBranchName);
+                //gitCheckout(hotfixBranchName);
 
                 String tagVersion = getCurrentProjectVersion();
                 if (tychoBuild && ArtifactUtils.isSnapshot(tagVersion)) {
@@ -139,6 +133,21 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                         commitMessages.getTagHotfixMessage());
             }
 
+            if (installProject) {
+                // mvn clean install
+                mvnCleanDeploy();
+            }
+
+
+            // git checkout master
+            gitCheckout(gitFlowConfig.getProductionBranch());
+            String prodVersion = getCurrentProjectVersion();
+            gitCheckout(hotfixBranchName);
+            mvnSetVersions(prodVersion);
+            gitCommit("Set hotfix pom to " + prodVersion + " from " + gitFlowConfig.getProductionBranch() );
+            gitCheckout(gitFlowConfig.getProductionBranch());
+            gitMergeNoff(hotfixBranchName);
+
             // check whether release branch exists
             // git for-each-ref --count=1 --format="%(refname:short)"
             // refs/heads/release/*
@@ -149,6 +158,12 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             if (StringUtils.isNotBlank(releaseBranch)) {
                 // git checkout release
                 gitCheckout(releaseBranch);
+                String releaseVersion = getCurrentProjectVersion();
+                gitCheckout(hotfixBranchName);
+                mvnSetVersions(releaseVersion);
+                gitCommit("Set hotfix pom to " + releaseVersion + " from " + releaseBranch);
+                gitCheckout(releaseBranch);
+
                 // git merge --no-ff hotfix/...
                 gitMergeNoff(hotfixBranchName);
             } /*else {
@@ -188,18 +203,11 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitCommit(commitMessages.getHotfixFinishMessage());
             }*/
 
-            gitCheckout(hotfixBranchName);
-
-            if (installProject) {
-                // mvn clean install
-                mvnCleanInstall();
-            }
-
             gitCheckout(gitFlowConfig.getProductionBranch());
 
             if (!keepBranch) {
                 // git branch -d hotfix/...
-                gitBranchDelete(hotfixBranchName);
+                gitBranchDeleteForce(hotfixBranchName);
             }
 
             if (pushRemote) {
