@@ -52,11 +52,11 @@
     <distributionManagement>
         <repository>
             <id>release</id>
-            <url>file:///Users/krs-imac/Documents/maven_repo/releases</url>
+            <url>file:///Users/krs/Documents/maven_repo/releases</url>
         </repository>
         <snapshotRepository>
             <id>snapshot</id>
-            <url>file:///Users/krs-imac/Documents/maven_repo/snapshots</url>
+            <url>file:///Users/krs/Documents/maven_repo/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
