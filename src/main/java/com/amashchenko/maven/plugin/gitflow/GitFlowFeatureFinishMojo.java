@@ -53,17 +53,16 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
      * 
      * @since 1.2.3
      */
-    @Parameter(property = "featureSquash", defaultValue = "false")
-    private boolean featureSquash = false;
+    @Parameter(property = "squashFeature", defaultValue = "true")
+    private boolean squashFeature = true;
 
     /**
-     * Whether to squash feature branch commits into a single commit upon
-     * merging.
+     * If you did a rebase -i on a feature branch then set this to true to do a ffwd merge
      *
      * @since 1.3.2
      */
-    @Parameter(property = "ffwdMerge", defaultValue = "true")
-    private boolean ffwdMerge = true;
+    @Parameter(property = "ffwdFeature", defaultValue = "false")
+    private boolean ffwdFeature = false;
 
     /** {@inheritDoc} */
     @Override
@@ -128,11 +127,11 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             // git checkout develop
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
 
-            if (featureSquash) {
+            if (squashFeature && !ffwdFeature) {
                 // git merge --squash feature/...
                 gitMergeSquash(featureBranchName);
                 gitCommit(featureBranchName);
-            } else if (ffwdMerge){
+            } else if (ffwdFeature){
                 gitMerge(featureBranchName, false, false);
             }else {
                 // git merge --no-ff feature/...
@@ -163,7 +162,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             }
 
             if (!keepBranch) {
-                if (featureSquash) {
+                if (squashFeature || ffwdFeature) {
                     // git branch -D feature/...
                     gitBranchDeleteForce(featureBranchName);
                 } else {
