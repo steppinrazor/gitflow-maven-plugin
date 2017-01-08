@@ -206,7 +206,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitPush(gitFlowConfig.getProductionBranch(), !skipTag);
 
                 // if no release branch
-                if (StringUtils.isBlank(releaseBranch)) {
+                if (StringUtils.isNotBlank(releaseBranch)) {
                     gitPush(releaseBranch, !skipTag);
                 }
             }
