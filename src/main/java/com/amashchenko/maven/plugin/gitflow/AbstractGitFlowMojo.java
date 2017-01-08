@@ -521,6 +521,11 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeGitCommand("tag", "-a", tagName, "-m", message);
     }
 
+    protected void gitResetToHead(final String branchName) throws MojoFailureException, CommandLineException{
+        getLog().info("Resetting branch " + branchName + " to HEAD");
+        executeGitCommand("reset", "--hard", "--quiet", "@^");
+    }
+
     /**
      * Executes git branch -d.
      * 
@@ -771,8 +776,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         cmd.clearArgs();
         cmd.addArguments(args);
 
-        final StringBuilderStreamConsumer out = new StringBuilderStreamConsumer(
-                verbose);
+        final StringBuilderStreamConsumer out = new StringBuilderStreamConsumer(verbose);
 
         final CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
 

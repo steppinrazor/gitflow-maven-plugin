@@ -142,11 +142,20 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             // git checkout master
             gitCheckout(gitFlowConfig.getProductionBranch());
             String prodVersion = getCurrentProjectVersion();
+            getLog().info("Prod version = " + prodVersion);
             gitCheckout(hotfixBranchName);
             mvnSetVersions(prodVersion);
             gitCommit("Set hotfix pom to " + prodVersion + " from " + gitFlowConfig.getProductionBranch() );
             gitCheckout(gitFlowConfig.getProductionBranch());
-            gitMergeNoff(hotfixBranchName);
+
+            try {
+                gitMergeNoff(hotfixBranchName);
+            }catch(MojoFailureException | CommandLineException e){
+                gitCheckout(hotfixBranchName);
+                gitResetToHead(hotfixBranchName);
+                gitCheckout(gitFlowConfig.getProductionBranch());
+                throw e;
+            }
 
             // check whether release branch exists
             // git for-each-ref --count=1 --format="%(refname:short)"
@@ -164,46 +173,16 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitCommit("Set hotfix pom to " + releaseVersion + " from " + releaseBranch);
                 gitCheckout(releaseBranch);
 
-                // git merge --no-ff hotfix/...
-                gitMergeNoff(hotfixBranchName);
-            } /*else {
-                if (notSameProdDevName()) {
-                    // git checkout develop
-                    gitCheckout(gitFlowConfig.getDevelopmentBranch());
-
+                try {
                     // git merge --no-ff hotfix/...
                     gitMergeNoff(hotfixBranchName);
+                }catch (MojoFailureException | CommandLineException e){
+                    gitCheckout(hotfixBranchName);
+                    gitResetToHead(hotfixBranchName);
+                    gitCheckout(releaseBranch);
+                    throw e;
                 }
-
-                // get current project version from pom
-                final String currentVersion = getCurrentProjectVersion();
-
-                String nextSnapshotVersion = null;
-                // get next snapshot version
-                try {
-                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
-                            currentVersion);
-                    nextSnapshotVersion = versionInfo.getNextVersion()
-                            .getSnapshotVersionString();
-                } catch (VersionParseException e) {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug(e);
-                    }
-                }
-
-                if (StringUtils.isBlank(nextSnapshotVersion)) {
-                    throw new MojoFailureException(
-                            "Next snapshot version is blank.");
-                }
-
-                // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
-                mvnSetVersions(nextSnapshotVersion);
-
-                // git commit -a -m updating for next development version
-                gitCommit(commitMessages.getHotfixFinishMessage());
-            }*/
-
-            gitCheckout(gitFlowConfig.getProductionBranch());
+            }
 
             if (!keepBranch) {
                 // git branch -d hotfix/...
