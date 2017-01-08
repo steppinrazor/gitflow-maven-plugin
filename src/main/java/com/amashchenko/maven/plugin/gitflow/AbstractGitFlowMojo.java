@@ -681,8 +681,16 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             CommandLineException {
         getLog().info("Cleaning and installing the project.");
 
-        executeMvnCommand("clean", "install");
+        executeMvnCommand("clean install");
     }
+
+    protected void mvnCleanDeploy() throws MojoFailureException,
+            CommandLineException {
+        getLog().info("Cleaning and installing the project.");
+
+        executeMvnCommand("clean deploy");
+    }
+
 
     /**
      * Executes Git command and returns output.
