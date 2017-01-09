@@ -483,8 +483,8 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeGitCommand("tag", "-a", tagName, "-m", message);
     }
 
-    protected void gitResetToHead(final String branchName) throws MojoFailureException, CommandLineException{
-        getLog().info("Resetting branch " + branchName + " to HEAD");
+    protected void gitHardResetToHead(final String branchName) throws MojoFailureException, CommandLineException{
+        getLog().info("Resetting (hard) branch " + branchName + " to HEAD");
         executeGitCommand("reset", "--hard", "--quiet", "HEAD^");
     }
 
@@ -537,10 +537,8 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
 
         if (result.getExitCode() == SUCCESS_EXIT_CODE) {
             getLog().info(
-                    "Comparing local branch '" + branchName + "' with remote '"
-                            + gitFlowConfig.getOrigin() + "/" + branchName + "'.");
-            String revlistout = executeGitCommandReturn("rev-list",
-                    "--left-right", "--count", branchName + "..." + gitFlowConfig.getOrigin() + "/" + branchName);
+                    "Comparing local branch '" + branchName + "' with remote '" + gitFlowConfig.getOrigin() + "/" + branchName + "'.");
+            String revlistout = executeGitCommandReturn("rev-list", "--left-right", "--count", branchName + "..." + gitFlowConfig.getOrigin() + "/" + branchName);
 
             String[] counts = org.apache.commons.lang3.StringUtils.split(revlistout, '\t');
             if (counts != null && counts.length > 1) {
@@ -636,6 +634,10 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Cleaning and installing the project.");
 
         executeMvnCommand("clean", "deploy");
+    }
+
+    protected void mark(String failedStep, String... remainingSteps){
+        getLog().error("!! Failed at state [" + failedStep + "] fix this then execute the remaining steps:\n" + join(remainingSteps, "\n ") );
     }
 
 
@@ -740,8 +742,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         private final String out;
         private final String error;
 
-        private CommandResult(final int exitCode, final String out,
-                final String error) {
+        private CommandResult(final int exitCode, final String out, final String error) {
             this.exitCode = exitCode;
             this.out = out;
             this.error = error;

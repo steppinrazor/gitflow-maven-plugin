@@ -15,6 +15,8 @@
  */
 package com.amashchenko.maven.plugin.gitflow;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -22,33 +24,48 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.release.versions.DefaultVersionInfo;
 import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.components.interactivity.PrompterException;
+import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
 import static org.codehaus.plexus.util.StringUtils.*;
 
 /**
- * The git flow release start mojo.
+ * The git flow release mojo.
  * 
  * @author Aleksandr Mashchenko
- * 
+ * @since 1.2.0
  */
-@Mojo(name = "release-start", aggregator = true)
-public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
+@Mojo(name = "release", aggregator = true)
+public class GitFlowReleaseMojo extends AbstractGitFlowMojo {
+
+    /** Whether to skip tagging the release in Git. */
+    @Parameter(property = "skipTag", defaultValue = "false")
+    private boolean skipTag = false;
 
     /**
-     * Whether to use the same name of the release branch for every release.
-     * Default is <code>false</code>, i.e. project version will be added to
-     * release branch prefix. <br/>
-     * <br/>
+     * Whether to skip calling Maven test goal before releasing.
      * 
-     * Note: By itself the default releaseBranchPrefix is not a valid branch
-     * name. You must change it when setting sameBranchName to <code>true</code>
-     * .
-     * 
-     * @since 1.2.0
+     * @since 1.0.5
      */
-    @Parameter(property = "sameBranchName", defaultValue = "false")
-    private boolean sameBranchName = false;
+    @Parameter(property = "skipTestProject", defaultValue = "false")
+    private boolean skipTestProject = false;
+
+    /**
+     * Whether to rebase branch or merge. If <code>true</code> then rebase will
+     * be performed.
+     * 
+     * @since 1.2.3
+     */
+    @Parameter(property = "releaseRebase", defaultValue = "false")
+    private boolean releaseRebase = false;
+
+    /**
+     * Whether to use <code>--no-ff</code> option when merging.
+     * 
+     * @since 1.2.3
+     */
+    @Parameter(property = "releaseMergeNoFF", defaultValue = "true")
+    private boolean releaseMergeNoFF = true;
 
     /**
      * Release version to use instead of the default next release version in non
@@ -70,27 +87,35 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 checkSnapshotDependencies();
             }
 
+            if (fetchRemote) {
+                gitFetchRemoteAndCompare(gitFlowConfig.getProductionBranch());
+            }
+
             final String releaseBranch = gitFindBranches(gitFlowConfig.getReleaseBranchPrefix(), true);
 
             if (isNotBlank(releaseBranch)) {
-                throw new MojoFailureException("Release branch already exists. Cannot start release.");
-            }
-
-            if (fetchRemote) {
-                gitFetchRemoteAndCompare(gitFlowConfig.getDevelopmentBranch());
+                throw new MojoFailureException(
+                        "Release branch already exists. Cannot start release.");
             }
 
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
 
+            if (!skipTestProject) {
+                mvnCleanTest();
+            }
+
             final String currentVersion = getCurrentProjectVersion();
 
             String defaultVersion = null;
-
-            try {
-                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
-                defaultVersion = versionInfo.getReleaseVersionString();
-            } catch (VersionParseException e) {
-                getLog().error(e);
+            if (tychoBuild) {
+                defaultVersion = currentVersion;
+            } else {
+                try {
+                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
+                    defaultVersion = versionInfo.getReleaseVersionString();
+                } catch (VersionParseException e) {
+                    getLog().error(e);
+                }
             }
 
             if (defaultVersion == null) {
@@ -104,30 +129,48 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 } catch (PrompterException e) {
                     getLog().error(e);
                 }
+            } else {
+                version = releaseVersion;
             }
 
             if (isBlank(version)) {
                 version = defaultVersion;
             }
 
-            String branchName = gitFlowConfig.getReleaseBranchPrefix();
-            if (!sameBranchName) {
-                branchName += version;
-            }
-
-            gitCreateAndCheckout(branchName, gitFlowConfig.getDevelopmentBranch());
-
             if (!version.equals(currentVersion)) {
                 mvnSetVersions(version);
                 gitCommit(commitMessages.getReleaseStartMessage());
             }
 
-            if(pushRemote){
-                gitPushAndTrack(branchName);
-                gitPush(gitFlowConfig.getDevelopmentBranch(), false);
+            if (!skipTag) {
+                gitTag(gitFlowConfig.getVersionTagPrefix() + version, commitMessages.getTagReleaseMessage());
             }
 
-            gitCheckout(branchName);
+            String nextSnapshotVersion = null;
+            try {
+                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(version);
+                nextSnapshotVersion = versionInfo.getNextVersion().getSnapshotVersionString();
+            } catch (VersionParseException e) {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug(e);
+                }
+            }
+
+            if (isBlank(nextSnapshotVersion)) {
+                throw new MojoFailureException(
+                        "Next snapshot version is blank.");
+            }
+
+            mvnSetVersions(nextSnapshotVersion);
+            gitCommit(commitMessages.getReleaseFinishMessage());
+
+            if (installProject) {
+                mvnCleanDeploy();
+            }
+
+            if (pushRemote) {
+                gitPush(gitFlowConfig.getProductionBranch(), !skipTag);
+            }
         } catch (CommandLineException e) {
             getLog().error(e);
         }

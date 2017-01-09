@@ -18,18 +18,14 @@ package com.amashchenko.maven.plugin.gitflow;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.shared.release.versions.DefaultVersionInfo;
-import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.components.interactivity.PrompterException;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
+import static com.amashchenko.maven.plugin.gitflow.Marker.*;
 import static org.codehaus.plexus.util.StringUtils.*;
 
 /**
@@ -129,8 +125,9 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitMergeNoff(hotfixBranchName);
             }catch(MojoFailureException | CommandLineException e){
                 gitCheckout(hotfixBranchName);
-                gitResetToHead(hotfixBranchName);
+                gitHardResetToHead(hotfixBranchName);
                 gitCheckout(gitFlowConfig.getProductionBranch());
+                mark(MERGE_NO_FFWD.str(gitFlowConfig.getProductionBranch()), MERGE_NO_FFWD.str("Additionally, no-ffwd merge into any current release branch"), DEL_BRANCH_FORCE.str(hotfixBranchName, gitFlowConfig.getOrigin()));
                 throw e;
             }
 
@@ -148,11 +145,14 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                     gitMergeNoff(hotfixBranchName);
                 }catch (MojoFailureException | CommandLineException e){
                     gitCheckout(hotfixBranchName);
-                    gitResetToHead(hotfixBranchName);
+                    gitHardResetToHead(hotfixBranchName);
                     gitCheckout(releaseBranch);
+                    mark(MERGE_NO_FFWD.str(gitFlowConfig.getProductionBranch()), MERGE_NO_FFWD.str("Additionally, no-ffwd merge into any current release branch"), DEL_BRANCH_FORCE.str(hotfixBranchName, gitFlowConfig.getOrigin()));
                     throw e;
                 }
             }
+
+            gitCommit(commitMessages.getHotfixFinishMessage());
 
             if (!keepBranch) {
                 gitBranchDeleteForce(hotfixBranchName);

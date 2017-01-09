@@ -26,6 +26,8 @@ import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
+import static org.codehaus.plexus.util.StringUtils.*;
+
 /**
  * The git flow feature start mojo.
  *
@@ -70,14 +72,14 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
 
             String featureName = null;
             try {
-                while (StringUtils.isBlank(featureName)) {
+                while (isBlank(featureName)) {
                     featureName = prompter.prompt("What is a name of feature branch? " + gitFlowConfig.getFeatureBranchPrefix());
                 }
             } catch (PrompterException e) {
                 getLog().error(e);
             }
 
-            featureName = StringUtils.deleteWhitespace(featureName);
+            featureName = deleteWhitespace(featureName);
 
             final boolean featureBranchExists = gitCheckBranchExists(gitFlowConfig.getFeatureBranchPrefix() + featureName);
 
@@ -98,7 +100,7 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
                     getLog().error(e);
                 }
 
-                if (StringUtils.isNotBlank(version)) {
+                if (isNotBlank(version)) {
                     mvnSetVersions(version);
                     gitCommit(commitMessages.getFeatureStartMessage());
                 }
