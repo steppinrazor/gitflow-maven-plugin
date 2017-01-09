@@ -26,22 +26,26 @@ import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
+import static java.lang.String.*;
+import static org.codehaus.plexus.util.StringUtils.*;
+
 /**
  * The git flow feature finish mojo.
- * 
+ *
  * @author Aleksandr Mashchenko
- * 
  */
 @Mojo(name = "feature-finish", aggregator = true)
 public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
 
-    /** Whether to keep feature branch after finish. */
+    /**
+     * Whether to keep feature branch after finish.
+     */
     @Parameter(property = "keepBranch", defaultValue = "false")
     private boolean keepBranch = false;
 
     /**
      * Whether to skip calling Maven test goal before merging the branch.
-     * 
+     *
      * @since 1.0.5
      */
     @Parameter(property = "skipTestProject", defaultValue = "false")
@@ -50,7 +54,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
     /**
      * Whether to squash feature branch commits into a single commit upon
      * merging.
-     * 
+     *
      * @since 1.2.3
      */
     @Parameter(property = "squashFeature", defaultValue = "true")
@@ -64,42 +68,38 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
     @Parameter(property = "ffwdFeature", defaultValue = "false")
     private boolean ffwdFeature = false;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            // check uncommitted changes
             checkUncommittedChanges();
 
-            // git for-each-ref --format='%(refname:short)' refs/heads/feature/*
-            final String featureBranches = gitFindBranches(
-                    gitFlowConfig.getFeatureBranchPrefix(), false);
+            final String featureBranches = gitFindBranches(gitFlowConfig.getFeatureBranchPrefix(), false);
 
-            if (StringUtils.isBlank(featureBranches)) {
+            if (isBlank(featureBranches)) {
                 throw new MojoFailureException("There are no feature branches.");
             }
 
-            // fetch and check remote
             if (fetchRemote) {
                 gitFetchRemoteAndCompare(gitFlowConfig.getDevelopmentBranch());
             }
 
             final String[] branches = featureBranches.split("\\r?\\n");
 
-            List<String> numberedList = new ArrayList<String>();
-            StringBuilder str = new StringBuilder("Feature branches:")
-                    .append(LS);
+            List<String> numberedList = new ArrayList<>();
+            StringBuilder str = new StringBuilder("Feature branches:").append(LS);
             for (int i = 0; i < branches.length; i++) {
                 str.append((i + 1) + ". " + branches[i] + LS);
-                numberedList.add(String.valueOf(i + 1));
+                numberedList.add(valueOf(i + 1))
             }
-            str.append("Choose feature branch to finish");
+            str.append("Choose feature branch to finish:");
 
             String featureNumber = null;
             try {
-                while (StringUtils.isBlank(featureNumber)) {
-                    featureNumber = prompter.prompt(str.toString(),
-                            numberedList);
+                while (isBlank(featureNumber)) {
+                    featureNumber = prompter.prompt(str.toString(), numberedList);
                 }
             } catch (PrompterException e) {
                 getLog().error(e);
@@ -111,62 +111,47 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 featureBranchName = branches[num - 1];
             }
 
-            if (StringUtils.isBlank(featureBranchName)) {
-                throw new MojoFailureException(
-                        "Feature branch name to finish is blank.");
+            if (isBlank(featureBranchName)) {
+                throw new MojoFailureException("Feature branch name to finish is blank.");
             }
 
             if (!skipTestProject) {
-                // git checkout feature/...
                 gitCheckout(featureBranchName);
-
-                // mvn clean test
                 mvnCleanTest();
             }
 
-            // git checkout develop
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
 
             if (squashFeature && !ffwdFeature) {
-                // git merge --squash feature/...
                 gitMergeSquash(featureBranchName);
                 gitCommit(featureBranchName);
-            } else if (ffwdFeature){
+            } else if (ffwdFeature) {
                 gitMerge(featureBranchName, false, false);
-            }else {
-                // git merge --no-ff feature/...
+            } else {
                 gitMergeNoff(featureBranchName);
                 gitCommit(featureBranchName);
             }
 
-            // get current project version from pom
             final String currentVersion = getCurrentProjectVersion();
 
-            final String featureName = featureBranchName.replaceFirst(
-                    gitFlowConfig.getFeatureBranchPrefix(), "");
+            final String featureName = featureBranchName.replaceFirst(gitFlowConfig.getFeatureBranchPrefix(), "");
 
             if (currentVersion.contains("-" + featureName)) {
-                final String version = currentVersion.replaceFirst("-"
-                        + featureName, "");
+                final String version = currentVersion.replaceFirst("-" + featureName, "");
 
-                // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
                 mvnSetVersions(version);
 
-                // git commit -a -m updating versions for development branch
                 gitCommit(commitMessages.getFeatureFinishMessage());
             }
 
             if (installProject) {
-                // mvn clean install
-                mvnCleanInstall();
+                mvnCleanDeploy();
             }
 
             if (!keepBranch) {
                 if (squashFeature || ffwdFeature) {
-                    // git branch -D feature/...
                     gitBranchDeleteForce(featureBranchName);
                 } else {
-                    // git branch -d feature/...
                     gitBranchDelete(featureBranchName);
                 }
             }

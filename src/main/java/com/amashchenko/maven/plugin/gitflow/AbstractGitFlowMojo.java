@@ -35,6 +35,9 @@ import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 
+import static org.codehaus.plexus.util.StringUtils.*;
+import static org.codehaus.plexus.util.cli.CommandLineUtils.*;
+
 /**
  * Abstract git flow mojo.
  * 
@@ -48,7 +51,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     private static final String TYCHO_VERSIONS_PLUGIN_SET_GOAL = "org.eclipse.tycho:tycho-versions-plugin:set-version";
 
     /** System line separator. */
-    protected static final String LS = System.getProperty("line.separator");
+    protected static final String LS = System.lineSeparator();
 
     /** Success exit code. */
     private static final int SUCCESS_EXIT_CODE = 0;
@@ -147,14 +150,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      * 
      */
     private void initExecutables() {
-        if (StringUtils.isBlank(cmdMvn.getExecutable())) {
-            if (StringUtils.isBlank(mvnExecutable)) {
+        if (isBlank(cmdMvn.getExecutable())) {
+            if (isBlank(mvnExecutable)) {
                 mvnExecutable = "mvn";
             }
             cmdMvn.setExecutable(mvnExecutable);
         }
-        if (StringUtils.isBlank(cmdGit.getExecutable())) {
-            if (StringUtils.isBlank(gitExecutable)) {
+        if (isBlank(cmdGit.getExecutable())) {
+            if (isBlank(gitExecutable)) {
                 gitExecutable = "git";
             }
             cmdGit.setExecutable(gitExecutable);
@@ -169,23 +172,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      */
     protected String getCurrentProjectVersion() throws MojoFailureException {
         try {
-            // read pom.xml
             final MavenXpp3Reader mavenReader = new MavenXpp3Reader();
-            final FileReader fileReader = new FileReader(project.getFile()
-                    .getAbsoluteFile());
-            try {
+            try(final FileReader fileReader = new FileReader(project.getFile().getAbsoluteFile());){
                 final Model model = mavenReader.read(fileReader);
 
                 if (model.getVersion() == null) {
-                    throw new MojoFailureException(
-                            "Cannot get current project version. This plugin should be executed from the parent project.");
+                    throw new MojoFailureException("Cannot get current project version. This plugin should be executed from the parent project.");
                 }
-
                 return model.getVersion();
-            } finally {
-                if (fileReader != null) {
-                    fileReader.close();
-                }
             }
         } catch (Exception e) {
             throw new MojoFailureException("", e);
@@ -248,16 +242,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
 
         // git diff --no-ext-diff --ignore-submodules --quiet --exit-code
         final CommandResult diffCommandResult = executeGitCommandExitCode(
-                "diff", "--no-ext-diff", "--ignore-submodules", "--quiet",
-                "--exit-code");
+                "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code");
 
         String error = null;
 
         if (diffCommandResult.getExitCode() == SUCCESS_EXIT_CODE) {
             // git diff-index --cached --quiet --ignore-submodules HEAD --
             final CommandResult diffIndexCommandResult = executeGitCommandExitCode(
-                    "diff-index", "--cached", "--quiet", "--ignore-submodules",
-                    "HEAD", "--");
+                    "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--");
             if (diffIndexCommandResult.getExitCode() != SUCCESS_EXIT_CODE) {
                 error = diffIndexCommandResult.getError();
                 uncommited = true;
@@ -267,7 +259,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             uncommited = true;
         }
 
-        if (StringUtils.isNotBlank(error)) {
+        if (isNotBlank(error)) {
             throw new MojoFailureException(error);
         }
 
@@ -280,24 +272,14 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      * @throws MojoFailureException
      * @throws CommandLineException
      */
-    protected void initGitFlowConfig() throws MojoFailureException,
-            CommandLineException {
-        gitSetConfig("gitflow.branch.master",
-                gitFlowConfig.getProductionBranch());
-        gitSetConfig("gitflow.branch.develop",
-                gitFlowConfig.getDevelopmentBranch());
-
-        gitSetConfig("gitflow.prefix.feature",
-                gitFlowConfig.getFeatureBranchPrefix());
-        gitSetConfig("gitflow.prefix.release",
-                gitFlowConfig.getReleaseBranchPrefix());
-        gitSetConfig("gitflow.prefix.hotfix",
-                gitFlowConfig.getHotfixBranchPrefix());
-        gitSetConfig("gitflow.prefix.support",
-                gitFlowConfig.getSupportBranchPrefix());
-        gitSetConfig("gitflow.prefix.versiontag",
-                gitFlowConfig.getVersionTagPrefix());
-
+    protected void initGitFlowConfig() throws MojoFailureException, CommandLineException {
+        gitSetConfig("gitflow.branch.master", gitFlowConfig.getProductionBranch());
+        gitSetConfig("gitflow.branch.develop", gitFlowConfig.getDevelopmentBranch());
+        gitSetConfig("gitflow.prefix.feature", gitFlowConfig.getFeatureBranchPrefix());
+        gitSetConfig("gitflow.prefix.release", gitFlowConfig.getReleaseBranchPrefix());
+        gitSetConfig("gitflow.prefix.hotfix", gitFlowConfig.getHotfixBranchPrefix());
+        gitSetConfig("gitflow.prefix.support", gitFlowConfig.getSupportBranchPrefix());
+        gitSetConfig("gitflow.prefix.versiontag", gitFlowConfig.getVersionTagPrefix());
         gitSetConfig("gitflow.origin", gitFlowConfig.getOrigin());
     }
 
@@ -321,8 +303,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeGitCommandExitCode("config", name, value);
     }
 
-    protected String checkIfChange(final String branch0, final String branch1) throws MojoFailureException,
-            CommandLineException{
+    protected String checkIfChange(final String branch0, final String branch1) throws MojoFailureException, CommandLineException{
         return executeGitCommandReturn("diff", "--name-status", branch0, "..", branch1);
     }
 
@@ -342,13 +323,9 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             CommandLineException {
         String branches;
         if (firstMatch) {
-            branches = executeGitCommandReturn("for-each-ref", "--count=1",
-                    "--format=\"%(refname:short)\"", "refs/heads/" + branchName
-                            + "*");
+            branches = executeGitCommandReturn("for-each-ref", "--count=1", "--format=\"%(refname:short)\"", "refs/heads/" + branchName + "*");
         } else {
-            branches = executeGitCommandReturn("for-each-ref",
-                    "--format=\"%(refname:short)\"", "refs/heads/" + branchName
-                            + "*");
+            branches = executeGitCommandReturn("for-each-ref", "--format=\"%(refname:short)\"", "refs/heads/" + branchName + "*");
         }
 
         // on *nix systems return values from git for-each-ref are wrapped in
@@ -363,8 +340,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
 
     protected String gitFindTags(final String tagPrefix) throws MojoFailureException,
             CommandLineException {
-        String tags = executeGitCommandReturn("for-each-ref",
-                    "--format=\"%(refname:short)\"", "refs/tags/" + tagPrefix + "*");
+        String tags = executeGitCommandReturn("for-each-ref", "--format=\"%(refname:short)\"", "refs/tags/" + tagPrefix + "*");
 
 
         // on *nix systems return values from git for-each-ref are wrapped in
@@ -389,8 +365,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      */
     protected boolean gitCheckBranchExists(final String branchName)
             throws MojoFailureException, CommandLineException {
-        CommandResult commandResult = executeGitCommandExitCode("show-ref",
-                "--verify", "--quiet", "refs/heads/" + branchName);
+        CommandResult commandResult = executeGitCommandExitCode("show-ref", "--verify", "--quiet", "refs/heads/" + branchName);
         return commandResult.getExitCode() == SUCCESS_EXIT_CODE;
     }
 
@@ -405,15 +380,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitCheckout(final String branchName)
             throws MojoFailureException, CommandLineException {
         getLog().info("Checking out '" + branchName + "' branch.");
-
         executeGitCommand("checkout", branchName);
-    }
-
-    protected void gitCheckoutTag(final String featureBranchName, final String tagName)
-            throws MojoFailureException, CommandLineException {
-        getLog().info("Checking out '" + tagName + "' tag.");
-
-        executeGitCommand("checkout", "-b", featureBranchName, tagName);
     }
 
     /**
@@ -430,9 +397,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             final String fromBranchName) throws MojoFailureException,
             CommandLineException {
         getLog().info(
-                "Creating a new branch '" + newBranchName + "' from '"
-                        + fromBranchName + "' and checking it out.");
-
+                "Creating a new branch '" + newBranchName + "' from '" + fromBranchName + "' and checking it out.");
         executeGitCommand("checkout", "-b", newBranchName, fromBranchName);
     }
 
@@ -447,7 +412,6 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitCommit(final String message) throws MojoFailureException,
             CommandLineException {
         getLog().info("Committing changes.");
-
         executeGitCommand("commit", "-a", "-m", message);
     }
 
@@ -485,8 +449,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      * @throws MojoFailureException
      * @throws CommandLineException
      */
-    protected void gitMergeNoff(final String branchName)
-            throws MojoFailureException, CommandLineException {
+    protected void gitMergeNoff(final String branchName) throws MojoFailureException, CommandLineException {
         gitMerge(branchName, false, true);
     }
 
@@ -517,13 +480,12 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitTag(final String tagName, final String message)
             throws MojoFailureException, CommandLineException {
         getLog().info("Creating '" + tagName + "' tag.");
-
         executeGitCommand("tag", "-a", tagName, "-m", message);
     }
 
     protected void gitResetToHead(final String branchName) throws MojoFailureException, CommandLineException{
         getLog().info("Resetting branch " + branchName + " to HEAD");
-        executeGitCommand("reset", "--hard", "--quiet", "@^");
+        executeGitCommand("reset", "--hard", "--quiet", "HEAD^");
     }
 
     /**
@@ -569,28 +531,21 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitFetchRemoteAndCompare(final String branchName)
             throws MojoFailureException, CommandLineException {
         getLog().info(
-                "Fetching remote branch '" + gitFlowConfig.getOrigin() + " "
-                        + branchName + "'.");
+                "Fetching remote branch '" + gitFlowConfig.getOrigin() + " " + branchName + "'.");
 
-        CommandResult result = executeGitCommandExitCode("fetch", "--quiet",
-                gitFlowConfig.getOrigin(), branchName);
+        CommandResult result = executeGitCommandExitCode("fetch", "--quiet", gitFlowConfig.getOrigin(), branchName);
 
         if (result.getExitCode() == SUCCESS_EXIT_CODE) {
             getLog().info(
                     "Comparing local branch '" + branchName + "' with remote '"
-                            + gitFlowConfig.getOrigin() + "/" + branchName
-                            + "'.");
+                            + gitFlowConfig.getOrigin() + "/" + branchName + "'.");
             String revlistout = executeGitCommandReturn("rev-list",
-                    "--left-right", "--count", branchName + "..."
-                            + gitFlowConfig.getOrigin() + "/" + branchName);
+                    "--left-right", "--count", branchName + "..." + gitFlowConfig.getOrigin() + "/" + branchName);
 
-            String[] counts = org.apache.commons.lang3.StringUtils.split(
-                    revlistout, '\t');
+            String[] counts = org.apache.commons.lang3.StringUtils.split(revlistout, '\t');
             if (counts != null && counts.length > 1) {
-                if (!"0".equals(org.apache.commons.lang3.StringUtils
-                        .deleteWhitespace(counts[1]))) {
-                    throw new MojoFailureException(
-                            "Remote branch is ahead of the local branch. Execute git pull.");
+                if (!"0".equals(org.apache.commons.lang3.StringUtils.deleteWhitespace(counts[1]))) {
+                    throw new MojoFailureException("Remote branch is ahead of the local branch. Execute git pull.");
                 }
             }
         } else {
@@ -618,23 +573,19 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitPush(final String branchName, boolean pushTags)
             throws MojoFailureException, CommandLineException {
         getLog().info(
-                "Pushing '" + branchName + "' branch" + " to '"
-                        + gitFlowConfig.getOrigin() + "'.");
+                "Pushing '" + branchName + "' branch" + " to '" + gitFlowConfig.getOrigin() + "'.");
 
         if (pushTags) {
-            executeGitCommand("push", "--quiet", "--tags",
-                    gitFlowConfig.getOrigin(), branchName);
+            executeGitCommand("push", "--quiet", "--tags", gitFlowConfig.getOrigin(), branchName);
         } else {
-            executeGitCommand("push", "--quiet", gitFlowConfig.getOrigin(),
-                    branchName);
+            executeGitCommand("push", "--quiet", gitFlowConfig.getOrigin(), branchName);
         }
     }
 
-    protected void gitPushTrack(final String branchName)
+    protected void gitPushAndTrack(final String branchName)
             throws MojoFailureException, CommandLineException {
         getLog().info(
-                "Pushing (tracking) '" + branchName + "' branch" + " to '"
-                        + gitFlowConfig.getOrigin() + "'.");
+                "Pushing (tracking) '" + branchName + "' branch" + " to '" + gitFlowConfig.getOrigin() + "'.");
         executeGitCommand("push", gitFlowConfig.getOrigin(), "-u", branchName);
     }
 
@@ -651,13 +602,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
             throws MojoFailureException, CommandLineException {
         getLog().info("Updating version(s) to '" + version + "'.");
 
-        if (tychoBuild) {
-            executeMvnCommand(TYCHO_VERSIONS_PLUGIN_SET_GOAL, "-DnewVersion="
-                    + version, "-Dtycho.mode=maven");
-        } else {
-            executeMvnCommand(VERSIONS_MAVEN_PLUGIN_SET_GOAL, "-DnewVersion="
-                    + version, "-DgenerateBackupPoms=false");
-        }
+        executeMvnCommand(VERSIONS_MAVEN_PLUGIN_SET_GOAL, "-DnewVersion=" + version, "-DgenerateBackupPoms=false");
     }
 
     /**
@@ -669,11 +614,8 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void mvnCleanTest() throws MojoFailureException,
             CommandLineException {
         getLog().info("Cleaning and testing the project.");
-        if (tychoBuild) {
-            executeMvnCommand("clean", "verify");
-        } else {
-            executeMvnCommand("clean", "test");
-        }
+
+        executeMvnCommand("clean", "test");
     }
 
     /**
@@ -767,38 +709,33 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
      *             If <code>failOnError</code> is <code>true</code> and command
      *             exit code is NOT equals to 0.
      */
-    private CommandResult executeCommand(final Commandline cmd,
-            final boolean failOnError, final String... args)
+    private CommandResult executeCommand(final Commandline cmd, final boolean failOnError, final String... args)
             throws CommandLineException, MojoFailureException {
-        // initialize executables
         initExecutables();
-        getLog().info(cmd.getExecutable() + " " + StringUtils.join(args, " "));
+        getLog().info(cmd.getExecutable() + " " + join(args, " "));
         cmd.clearArgs();
         cmd.addArguments(args);
 
         final StringBuilderStreamConsumer out = new StringBuilderStreamConsumer(verbose);
-
-        final CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
+        final StringStreamConsumer err = new StringStreamConsumer();
 
         // execute
-        final int exitCode = CommandLineUtils.executeCommandLine(cmd, out, err);
+        final int exitCode = executeCommandLine(cmd, out, err);
 
         String errorStr = err.getOutput();
         String outStr = out.getOutput();
 
         if (failOnError && exitCode != SUCCESS_EXIT_CODE) {
             // not all commands print errors to error stream
-            if (StringUtils.isBlank(errorStr) && StringUtils.isNotBlank(outStr)) {
+            if (isBlank(errorStr) && isNotBlank(outStr)) {
                 errorStr = outStr;
             }
-
             throw new MojoFailureException(errorStr);
         }
-
         return new CommandResult(exitCode, outStr, errorStr);
     }
 
-    private static class CommandResult {
+    private static final class CommandResult {
         private final int exitCode;
         private final String out;
         private final String error;

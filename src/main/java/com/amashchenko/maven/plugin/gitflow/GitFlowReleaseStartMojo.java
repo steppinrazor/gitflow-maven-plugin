@@ -22,8 +22,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.release.versions.DefaultVersionInfo;
 import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.components.interactivity.PrompterException;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
+
+import static org.codehaus.plexus.util.StringUtils.*;
 
 /**
  * The git flow release start mojo.
@@ -62,57 +63,38 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            // set git flow configuration
             initGitFlowConfig();
-
-            // check uncommitted changes
             checkUncommittedChanges();
 
-            // check snapshots dependencies
             if (!allowSnapshots) {
                 checkSnapshotDependencies();
             }
 
-            // git for-each-ref --count=1 refs/heads/release/*
-            final String releaseBranch = gitFindBranches(
-                    gitFlowConfig.getReleaseBranchPrefix(), true);
+            final String releaseBranch = gitFindBranches(gitFlowConfig.getReleaseBranchPrefix(), true);
 
-            if (StringUtils.isNotBlank(releaseBranch)) {
-                throw new MojoFailureException(
-                        "Release branch already exists. Cannot start release.");
+            if (isNotBlank(releaseBranch)) {
+                throw new MojoFailureException("Release branch already exists. Cannot start release.");
             }
 
-            // fetch and check remote
             if (fetchRemote) {
                 gitFetchRemoteAndCompare(gitFlowConfig.getDevelopmentBranch());
             }
 
-            // need to be in develop to get correct project version
-            // git checkout develop
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
 
-            // get current project version from pom
             final String currentVersion = getCurrentProjectVersion();
 
             String defaultVersion = null;
-            if (tychoBuild) {
-                defaultVersion = currentVersion;
-            } else {
-                // get default release version
-                try {
-                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
-                            currentVersion);
-                    defaultVersion = versionInfo.getReleaseVersionString();
-                } catch (VersionParseException e) {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug(e);
-                    }
-                }
+
+            try {
+                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
+                defaultVersion = versionInfo.getReleaseVersionString();
+            } catch (VersionParseException e) {
+                getLog().error(e);
             }
 
             if (defaultVersion == null) {
-                throw new MojoFailureException(
-                        "Cannot get default project version.");
+                throw new MojoFailureException("Cannot get default project version.");
             }
 
             String version = null;
@@ -125,7 +107,7 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 }
             }
 
-            if (StringUtils.isBlank(version)) {
+            if (isBlank(version)) {
                 version = defaultVersion;
             }
 
@@ -134,26 +116,15 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
                 branchName += version;
             }
 
-            // git checkout -b release/... develop
-            gitCreateAndCheckout(branchName,
-                    gitFlowConfig.getDevelopmentBranch());
+            gitCreateAndCheckout(branchName, gitFlowConfig.getDevelopmentBranch());
 
-            // execute if version changed
             if (!version.equals(currentVersion)) {
-                // mvn versions:set -DnewVersion=... -DgenerateBackupPoms=false
                 mvnSetVersions(version);
-
-                // git commit -a -m updating versions for release
                 gitCommit(commitMessages.getReleaseStartMessage());
             }
 
-            if (installProject) {
-                // mvn clean install
-                //mvnCleanInstall();
-            }
-
             if(pushRemote){
-                gitPushTrack(branchName);
+                gitPushAndTrack(branchName);
                 gitPush(gitFlowConfig.getDevelopmentBranch(), false);
             }
 

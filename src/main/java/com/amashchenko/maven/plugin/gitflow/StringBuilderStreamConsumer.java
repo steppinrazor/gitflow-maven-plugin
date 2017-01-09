@@ -17,8 +17,10 @@ package com.amashchenko.maven.plugin.gitflow;
 
 import org.codehaus.plexus.util.cli.StreamConsumer;
 
-public class StringBuilderStreamConsumer implements StreamConsumer {
-    private static final String LS = System.getProperty("line.separator"), TAG = "[Stream] ";
+import static java.lang.System.*;
+
+public final class StringBuilderStreamConsumer implements StreamConsumer {
+    private static final String TAG = "[Stream] ";
 
     private final StringBuilder builder = new StringBuilder();
 
@@ -35,10 +37,10 @@ public class StringBuilderStreamConsumer implements StreamConsumer {
     @Override
     public void consumeLine(String line) {
         if (printOut) {
-            System.out.println(TAG + line);
+            out.println(TAG + line);
         }
 
-        builder.append(line).append(LS);
+        builder.append(line).append(lineSeparator());
     }
 
     public String getOutput() {

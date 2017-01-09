@@ -15,19 +15,18 @@
  */
 package com.amashchenko.maven.plugin.gitflow;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.shared.release.versions.DefaultVersionInfo;
 import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.components.interactivity.PrompterException;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.codehaus.plexus.util.StringUtils.*;
 
 /**
  * The git flow hotfix start mojo.
@@ -50,7 +49,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
 
             final String hotfixTags = gitFindTags(gitFlowConfig.getVersionTagPrefix());
 
-            if (StringUtils.isBlank(hotfixTags)) {
+            if (isBlank(hotfixTags)) {
                 throw new MojoFailureException("There are not tags that fit pattern " + gitFlowConfig.getVersionTagPrefix() + "*");
             }
 
@@ -67,7 +66,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
 
             String tagChoice = null;
             try {
-                while (StringUtils.isBlank(tagChoice)) {
+                while (isBlank(tagChoice)) {
                     tagChoice = prompter.prompt(str.toString(),
                             numberedList);
                 }
@@ -81,7 +80,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
                 tagName = tags[num - 1];
             }
 
-            if (StringUtils.isBlank(tagName)) {
+            if (isBlank(tagName)) {
                 throw new MojoFailureException(
                         "Tag name to create hotfix is empty.");
             }
@@ -104,38 +103,29 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
 
             String version = null;
             try {
-                version = prompter.prompt("What is the hotfix version? ["
-                        + defaultVersion + "]");
+                version = prompter.prompt("What is the hotfix version? [" + defaultVersion + "]");
             } catch (PrompterException e) {
                 getLog().error(e);
             }
 
-            if (StringUtils.isBlank(version)) {
+            if (isBlank(version)) {
                 version = defaultVersion;
             }
 
-            // git for-each-ref refs/heads/hotfix/...
-            final boolean hotfixBranchExists = gitCheckBranchExists(gitFlowConfig
-                    .getHotfixBranchPrefix() + version);
+            final boolean hotfixBranchExists = gitCheckBranchExists(gitFlowConfig.getHotfixBranchPrefix() + version);
 
             if (hotfixBranchExists) {
-                throw new MojoFailureException(
-                        "Hotfix branch with that name already exists. Cannot start hotfix.");
+                throw new MojoFailureException("Hotfix branch with that name already exists. Cannot start hotfix.");
             }
 
-            gitCheckoutTag(gitFlowConfig.getHotfixBranchPrefix() + version, tagName);
+            gitCreateAndCheckout(gitFlowConfig.getHotfixBranchPrefix() + version, tagName);
 
-            gitPushTrack(gitFlowConfig.getHotfixBranchPrefix() + version);
+            gitPushAndTrack(gitFlowConfig.getHotfixBranchPrefix() + version);
 
             mvnSetVersions(version);
 
-            // git commit -a -m updating versions for hotfix
             gitCommit(commitMessages.getHotfixStartMessage());
 
-            if (installProject) {
-                // mvn clean install
-                mvnCleanInstall();
-            }
         } catch (CommandLineException e) {
             getLog().error(e);
         }

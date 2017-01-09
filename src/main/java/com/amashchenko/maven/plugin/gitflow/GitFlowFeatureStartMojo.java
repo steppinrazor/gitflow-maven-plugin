@@ -28,9 +28,8 @@ import org.codehaus.plexus.util.cli.CommandLineException;
 
 /**
  * The git flow feature start mojo.
- * 
+ *
  * @author Aleksandr Mashchenko
- * 
  */
 @Mojo(name = "feature-start", aggregator = true)
 public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
@@ -38,7 +37,7 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
     /**
      * Whether to skip changing project version. Default is <code>false</code>
      * (the feature name will be appended to project version).
-     * 
+     *
      * @since 1.0.5
      */
     @Parameter(property = "skipFeatureVersion", defaultValue = "false")
@@ -53,19 +52,18 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
     @Parameter(property = "featureInProgress", defaultValue = "false")
     private boolean featureInProgress = false;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            // set git flow configuration
             initGitFlowConfig();
 
-            if(!featureInProgress) {
-                // check uncommitted changes
+            if (!featureInProgress) {
                 checkUncommittedChanges();
             }
 
-            // fetch and check remote
             if (!featureInProgress && fetchRemote) {
                 gitFetchRemoteAndCompare(gitFlowConfig.getDevelopmentBranch());
             }
@@ -73,9 +71,7 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
             String featureName = null;
             try {
                 while (StringUtils.isBlank(featureName)) {
-                    featureName = prompter
-                            .prompt("What is a name of feature branch? "
-                                    + gitFlowConfig.getFeatureBranchPrefix());
+                    featureName = prompter.prompt("What is a name of feature branch? " + gitFlowConfig.getFeatureBranchPrefix());
                 }
             } catch (PrompterException e) {
                 getLog().error(e);
@@ -83,49 +79,33 @@ public class GitFlowFeatureStartMojo extends AbstractGitFlowMojo {
 
             featureName = StringUtils.deleteWhitespace(featureName);
 
-            // git for-each-ref refs/heads/feature/...
-            final boolean featureBranchExists = gitCheckBranchExists(gitFlowConfig
-                    .getFeatureBranchPrefix() + featureName);
+            final boolean featureBranchExists = gitCheckBranchExists(gitFlowConfig.getFeatureBranchPrefix() + featureName);
 
             if (featureBranchExists) {
-                throw new MojoFailureException(
-                        "Feature branch with that name already exists. Cannot start feature.");
+                throw new MojoFailureException("Feature branch with that name already exists. Cannot start feature.");
             }
 
-            // git checkout -b ... develop
-            gitCreateAndCheckout(gitFlowConfig.getFeatureBranchPrefix()
-                    + featureName, gitFlowConfig.getDevelopmentBranch());
+            gitCreateAndCheckout(gitFlowConfig.getFeatureBranchPrefix() + featureName, gitFlowConfig.getDevelopmentBranch());
 
-            if (!skipFeatureVersion && !tychoBuild) {
-                // get current project version from pom
+            if (!skipFeatureVersion) {
                 final String currentVersion = getCurrentProjectVersion();
 
                 String version = null;
                 try {
-                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(
-                            currentVersion);
-                    version = versionInfo.getReleaseVersionString() + "-"
-                            + featureName + "-" + Artifact.SNAPSHOT_VERSION;
+                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
+                    version = versionInfo.getReleaseVersionString() + "-" + featureName + "-" + Artifact.SNAPSHOT_VERSION;
                 } catch (VersionParseException e) {
-                        getLog().error(e);
+                    getLog().error(e);
                 }
 
                 if (StringUtils.isNotBlank(version)) {
-                    // mvn versions:set -DnewVersion=...
-                    // -DgenerateBackupPoms=false
                     mvnSetVersions(version);
-
-                    // git commit -a -m updating versions for feature branch
                     gitCommit(commitMessages.getFeatureStartMessage());
                 }
             }
 
-            if (installProject) {
-                // mvn clean install
-                mvnCleanInstall();
-            }
-            if(pushRemote){
-                gitPushTrack(gitFlowConfig.getFeatureBranchPrefix() + featureName);
+            if (pushRemote) {
+                gitPushAndTrack(gitFlowConfig.getFeatureBranchPrefix() + featureName);
             }
         } catch (CommandLineException e) {
             getLog().error(e);
