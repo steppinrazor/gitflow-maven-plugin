@@ -20,7 +20,7 @@ import org.codehaus.plexus.util.cli.StreamConsumer;
 import static java.lang.System.*;
 
 public final class StringBuilderStreamConsumer implements StreamConsumer {
-    private static final String TAG = "[Stream] ";
+    private static final String TAG = "[gitflow] ";
 
     private final StringBuilder builder = new StringBuilder();
 
