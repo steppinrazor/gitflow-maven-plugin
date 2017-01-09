@@ -25,7 +25,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
-import static com.amashchenko.maven.plugin.gitflow.Marker.*;
 import static org.codehaus.plexus.util.StringUtils.*;
 
 /**
@@ -110,7 +109,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             }
 
             if (installProject) {
-                mvnDeploy();
+                mvnCleanDeploy();
             }
 
             gitCheckout(gitFlowConfig.getProductionBranch());

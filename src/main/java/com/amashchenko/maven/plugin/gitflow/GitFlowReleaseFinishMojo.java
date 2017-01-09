@@ -129,7 +129,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             gitCommit(commitMessages.getReleaseFinishMessage());
 
             if (installProject) {
-                mvnDeploy();
+                mvnCleanDeploy();
             }
 
             if (!keepBranch) {

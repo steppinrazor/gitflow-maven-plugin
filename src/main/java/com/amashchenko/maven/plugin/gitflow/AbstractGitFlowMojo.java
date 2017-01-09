@@ -629,11 +629,11 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeMvnCommand("clean", "install");
     }
 
-    protected void mvnDeploy() throws MojoFailureException,
+    protected void mvnCleanDeploy() throws MojoFailureException,
             CommandLineException {
         getLog().info("Cleaning and installing the project.");
 
-        executeMvnCommand("deploy");
+        executeMvnCommand("clean", "deploy");
     }
 
     protected void mark(String failedStep, String... remainingSteps){

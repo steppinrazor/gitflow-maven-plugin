@@ -91,7 +91,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             StringBuilder str = new StringBuilder("Feature branches:").append(LS);
             for (int i = 0; i < branches.length; i++) {
                 str.append((i + 1) + ". " + branches[i] + LS);
-                numberedList.add(valueOf(i + 1))
+                numberedList.add(valueOf(i + 1));
             }
             str.append("Choose feature branch to finish:");
 
@@ -139,12 +139,11 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 final String version = currentVersion.replaceFirst("-" + featureName, "");
 
                 mvnSetVersions(version);
-
                 gitCommit(commitMessages.getFeatureFinishMessage());
             }
 
             if (installProject) {
-                mvnDeploy();
+                mvnCleanDeploy();
             }
 
             if (!keepBranch) {

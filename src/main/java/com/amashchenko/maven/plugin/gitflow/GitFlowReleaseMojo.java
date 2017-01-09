@@ -139,7 +139,7 @@ public class GitFlowReleaseMojo extends AbstractGitFlowMojo {
                 gitTag(gitFlowConfig.getVersionTagPrefix() + version, commitMessages.getTagReleaseMessage());
             }
 
-            mvnDeploy();
+            mvnCleanDeploy();
 
             String nextSnapshotVersion = null;
             try {
