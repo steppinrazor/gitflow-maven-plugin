@@ -629,15 +629,15 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeMvnCommand("clean", "install");
     }
 
-    protected void mvnCleanDeploy() throws MojoFailureException,
+    protected void mvnDeploy() throws MojoFailureException,
             CommandLineException {
         getLog().info("Cleaning and installing the project.");
 
-        executeMvnCommand("clean", "deploy");
+        executeMvnCommand("deploy");
     }
 
     protected void mark(String failedStep, String... remainingSteps){
-        getLog().error("!! Failed at state [" + failedStep + "] fix this then execute the remaining steps:\n" + join(remainingSteps, "\n ") );
+        getLog().error("!! Failed at step [" + failedStep + "] fix this then execute the remaining steps:\n" + join(remainingSteps, "\n ") );
     }
 
 

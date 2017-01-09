@@ -23,7 +23,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
 import static java.lang.String.*;
@@ -145,7 +144,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             }
 
             if (installProject) {
-                mvnCleanDeploy();
+                mvnDeploy();
             }
 
             if (!keepBranch) {

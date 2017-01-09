@@ -15,8 +15,6 @@
  */
 package com.amashchenko.maven.plugin.gitflow;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -24,7 +22,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.release.versions.DefaultVersionInfo;
 import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.components.interactivity.PrompterException;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
 import static org.codehaus.plexus.util.StringUtils.*;
@@ -94,8 +91,7 @@ public class GitFlowReleaseMojo extends AbstractGitFlowMojo {
             final String releaseBranch = gitFindBranches(gitFlowConfig.getReleaseBranchPrefix(), true);
 
             if (isNotBlank(releaseBranch)) {
-                throw new MojoFailureException(
-                        "Release branch already exists. Cannot start release.");
+                throw new MojoFailureException("Release branch already exists. Cannot start release.");
             }
 
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
@@ -107,15 +103,12 @@ public class GitFlowReleaseMojo extends AbstractGitFlowMojo {
             final String currentVersion = getCurrentProjectVersion();
 
             String defaultVersion = null;
-            if (tychoBuild) {
-                defaultVersion = currentVersion;
-            } else {
-                try {
-                    final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
-                    defaultVersion = versionInfo.getReleaseVersionString();
-                } catch (VersionParseException e) {
-                    getLog().error(e);
-                }
+
+            try {
+                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
+                defaultVersion = versionInfo.getReleaseVersionString();
+            } catch (VersionParseException e) {
+                getLog().error(e);
             }
 
             if (defaultVersion == null) {
@@ -146,27 +139,22 @@ public class GitFlowReleaseMojo extends AbstractGitFlowMojo {
                 gitTag(gitFlowConfig.getVersionTagPrefix() + version, commitMessages.getTagReleaseMessage());
             }
 
+            mvnDeploy();
+
             String nextSnapshotVersion = null;
             try {
                 final DefaultVersionInfo versionInfo = new DefaultVersionInfo(version);
                 nextSnapshotVersion = versionInfo.getNextVersion().getSnapshotVersionString();
             } catch (VersionParseException e) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug(e);
-                }
+                getLog().error(e);
             }
 
             if (isBlank(nextSnapshotVersion)) {
-                throw new MojoFailureException(
-                        "Next snapshot version is blank.");
+                throw new MojoFailureException("Next snapshot version is blank.");
             }
 
             mvnSetVersions(nextSnapshotVersion);
             gitCommit(commitMessages.getReleaseFinishMessage());
-
-            if (installProject) {
-                mvnCleanDeploy();
-            }
 
             if (pushRemote) {
                 gitPush(gitFlowConfig.getProductionBranch(), !skipTag);

@@ -110,7 +110,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             }
 
             if (installProject) {
-                mvnCleanDeploy();
+                mvnDeploy();
             }
 
             gitCheckout(gitFlowConfig.getProductionBranch());
@@ -124,10 +124,10 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             try {
                 gitMergeNoff(hotfixBranchName);
             }catch(MojoFailureException | CommandLineException e){
+                getLog().error("Error occured with merging to " + gitFlowConfig.getProductionBranch()  + ", resetting hotfix to HEAD");
                 gitCheckout(hotfixBranchName);
                 gitHardResetToHead(hotfixBranchName);
                 gitCheckout(gitFlowConfig.getProductionBranch());
-                mark(MERGE_NO_FFWD.str(gitFlowConfig.getProductionBranch()), MERGE_NO_FFWD.str("Additionally, no-ffwd merge into any current release branch"), DEL_BRANCH_FORCE.str(hotfixBranchName, gitFlowConfig.getOrigin()));
                 throw e;
             }
 
@@ -144,10 +144,10 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 try {
                     gitMergeNoff(hotfixBranchName);
                 }catch (MojoFailureException | CommandLineException e){
+                    getLog().error("Error occured with merging to " + releaseBranch  + ", resetting hotfix to HEAD");
                     gitCheckout(hotfixBranchName);
                     gitHardResetToHead(hotfixBranchName);
                     gitCheckout(releaseBranch);
-                    mark(MERGE_NO_FFWD.str(gitFlowConfig.getProductionBranch()), MERGE_NO_FFWD.str("Additionally, no-ffwd merge into any current release branch"), DEL_BRANCH_FORCE.str(hotfixBranchName, gitFlowConfig.getOrigin()));
                     throw e;
                 }
             }
