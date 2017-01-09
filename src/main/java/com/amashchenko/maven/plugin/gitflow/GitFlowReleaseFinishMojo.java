@@ -15,15 +15,16 @@
  */
 package com.amashchenko.maven.plugin.gitflow;
 
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.shared.release.versions.DefaultVersionInfo;
-import org.apache.maven.shared.release.versions.VersionParseException;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
-import static org.codehaus.plexus.util.StringUtils.*;
+import static java.text.MessageFormat.format;
+import static org.apache.commons.lang3.StringUtils.countMatches;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * The git flow release finish mojo.
@@ -113,12 +114,11 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             gitCheckout(gitFlowConfig.getProductionBranch());
 
             String nextSnapshotVersion = null;
-            try {
-                final DefaultVersionInfo versionInfo = new DefaultVersionInfo(currentVersion);
-                nextSnapshotVersion = versionInfo.getNextVersion().getSnapshotVersionString();
-            } catch (VersionParseException e) {
-                getLog().error(e);
-            }
+
+            //Not using DefaultVersionInfo here because it increments the incremental version rather than the minor version
+            String format = "{0}.{1}.{2}-SNAPSHOT";
+            final DefaultArtifactVersion v = new DefaultArtifactVersion(currentVersion);
+            nextSnapshotVersion = format(format,v.getMajorVersion(), v.getMinorVersion() + 1, v.getIncrementalVersion());
 
             if (isBlank(nextSnapshotVersion)) {
                 throw new MojoFailureException("Next snapshot version is blank.");

@@ -17,10 +17,11 @@ package com.amashchenko.maven.plugin.gitflow;
 
 import org.codehaus.plexus.util.cli.StreamConsumer;
 
-import static java.lang.System.*;
+import static java.lang.System.lineSeparator;
+import static java.lang.System.out;
 
 public final class StringBuilderStreamConsumer implements StreamConsumer {
-    private static final String TAG = "[gitflow] ";
+    private static final String TAG = "[GITFLOW] ";
 
     private final StringBuilder builder = new StringBuilder();
 
