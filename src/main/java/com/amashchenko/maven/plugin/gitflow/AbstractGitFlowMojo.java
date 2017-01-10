@@ -16,6 +16,7 @@
 package com.amashchenko.maven.plugin.gitflow;
 
 import java.io.FileReader;
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.maven.artifact.ArtifactUtils;
@@ -303,6 +304,10 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
 
     protected String checkIfChange(final String branch0, final String branch1) throws MojoFailureException, CommandLineException{
         return executeGitCommandReturn("diff", "--name-status", branch0, "..", branch1);
+    }
+
+    protected String fmt(String log, Object... args){
+        return MessageFormat.format(log, args);
     }
 
     /**

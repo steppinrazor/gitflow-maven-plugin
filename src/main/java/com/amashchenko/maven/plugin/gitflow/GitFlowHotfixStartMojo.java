@@ -123,7 +123,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
 
             mvnSetVersions(version);
 
-            gitCommit(commitMessages.getHotfixStartMessage());
+            gitCommit(fmt(commitMessages.getHotfixStartMessage(), gitFlowConfig.getHotfixBranchPrefix() + version));
 
         } catch (CommandLineException e) {
             getLog().error(e);
