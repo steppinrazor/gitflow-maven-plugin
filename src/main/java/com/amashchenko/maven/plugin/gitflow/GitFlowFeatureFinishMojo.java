@@ -72,6 +72,9 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if(squashFeature ^ ffwdFeature)
+            throw new MojoExecutionException("'squashFeature' and 'ffwdFeature' are both true, please set one.");
+
         try {
             checkUncommittedChanges();
 
@@ -128,7 +131,6 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
                 gitMerge(featureBranchName, false, false);
             } else {
                 gitMergeNoff(featureBranchName);
-                gitCommit(featureBranchName);
             }
 
             final String currentVersion = getCurrentProjectVersion();
@@ -148,7 +150,7 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
 
             if (!keepBranch) {
                 if (squashFeature || ffwdFeature) {
-                    gitBranchDeleteForce(featureBranchName);
+                    gitBranchForceDelete(featureBranchName);
                 } else {
                     gitBranchDelete(featureBranchName);
                 }

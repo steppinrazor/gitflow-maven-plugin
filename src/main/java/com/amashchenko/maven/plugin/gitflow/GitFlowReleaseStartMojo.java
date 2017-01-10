@@ -25,6 +25,7 @@ import org.codehaus.plexus.components.interactivity.PrompterException;
 import org.codehaus.plexus.util.cli.CommandLineException;
 
 import static org.codehaus.plexus.util.StringUtils.*;
+import static java.text.MessageFormat.format;
 
 /**
  * The git flow release start mojo.
@@ -119,7 +120,7 @@ public class GitFlowReleaseStartMojo extends AbstractGitFlowMojo {
 
             if (!version.equals(currentVersion)) {
                 mvnSetVersions(version);
-                gitCommit(commitMessages.getReleaseStartMessage());
+                gitCommit(format(commitMessages.getReleaseStartMessage(), branchName));
             }
 
             if(pushRemote){

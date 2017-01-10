@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.codehaus.plexus.util.StringUtils.*;
+import static java.text.MessageFormat.format;
 
 /**
  * The git flow hotfix start mojo.
@@ -123,7 +124,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
 
             mvnSetVersions(version);
 
-            gitCommit(fmt(commitMessages.getHotfixStartMessage(), gitFlowConfig.getHotfixBranchPrefix() + version));
+            gitCommit(format(commitMessages.getHotfixStartMessage(), gitFlowConfig.getHotfixBranchPrefix() + version));
 
         } catch (CommandLineException e) {
             getLog().error(e);

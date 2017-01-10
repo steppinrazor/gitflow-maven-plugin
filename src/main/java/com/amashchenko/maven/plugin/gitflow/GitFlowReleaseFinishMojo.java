@@ -108,7 +108,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             if (!skipTag) {
                 gitCheckout(releaseBranch);
                 String tagVersion = getCurrentProjectVersion();
-                gitTag(gitFlowConfig.getVersionTagPrefix() + tagVersion, commitMessages.getTagReleaseMessage());
+                gitTag(gitFlowConfig.getVersionTagPrefix() + tagVersion, format(commitMessages.getTagReleaseMessage(), gitFlowConfig.getVersionTagPrefix() + tagVersion));
             }
 
             gitCheckout(gitFlowConfig.getProductionBranch());
@@ -116,9 +116,22 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
             String nextSnapshotVersion = null;
 
             //Not using DefaultVersionInfo here because it increments the incremental version rather than the minor version
-            String format = "{0}.{1}.{2}-SNAPSHOT";
             final DefaultArtifactVersion v = new DefaultArtifactVersion(currentVersion);
-            nextSnapshotVersion = format(format,v.getMajorVersion(), v.getMinorVersion() + 1, v.getIncrementalVersion());
+
+            switch(countMatches(currentVersion, '.')){
+                case 0:
+                    nextSnapshotVersion = format("{0}-SNAPSHOT",v.getMajorVersion() + 1);
+                    break;
+                case 1:
+                    nextSnapshotVersion = format("{0}.{1}-SNAPSHOT",v.getMajorVersion(), v.getMinorVersion() + 1);
+                    break;
+                case 2:
+                    nextSnapshotVersion = format("{0}.{1}.{2}-SNAPSHOT",v.getMajorVersion(), v.getMinorVersion() + 1, v.getIncrementalVersion());
+                    break;
+                default:
+                    throw new MojoExecutionException("Expected version with <=2 periods(.) but '" + currentVersion + "' had more.");
+            }
+
 
             if (isBlank(nextSnapshotVersion)) {
                 throw new MojoFailureException("Next snapshot version is blank.");
@@ -126,7 +139,7 @@ public class GitFlowReleaseFinishMojo extends AbstractGitFlowMojo {
 
             mvnSetVersions(nextSnapshotVersion);
 
-            gitCommit(commitMessages.getReleaseFinishMessage());
+            gitCommit(format(commitMessages.getReleaseFinishMessage(),releaseBranch));
 
             if (installProject) {
                 mvnCleanDeploy();

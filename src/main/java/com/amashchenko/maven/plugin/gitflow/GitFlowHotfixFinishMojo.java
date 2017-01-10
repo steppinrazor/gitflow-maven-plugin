@@ -146,7 +146,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             }
 
             if (!keepBranch) {
-                gitBranchDeleteForce(hotfixBranchName);
+                gitBranchForceDelete(hotfixBranchName);
             }
 
             if (pushRemote) {

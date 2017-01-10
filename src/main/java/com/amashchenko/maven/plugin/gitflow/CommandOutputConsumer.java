@@ -20,16 +20,16 @@ import org.codehaus.plexus.util.cli.StreamConsumer;
 import static java.lang.System.lineSeparator;
 import static java.lang.System.out;
 
-public final class StringBuilderStreamConsumer implements StreamConsumer {
+public final class CommandOutputConsumer implements StreamConsumer {
     private static final String TAG = "$> ";
     private final StringBuilder builder = new StringBuilder();
     private final boolean printOut;
 
-    public StringBuilderStreamConsumer() {
+    public CommandOutputConsumer() {
         this(false);
     }
 
-    public StringBuilderStreamConsumer(boolean printOut) {
+    public CommandOutputConsumer(boolean printOut) {
         this.printOut = printOut;
     }
 
