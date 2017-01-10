@@ -30,9 +30,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.components.interactivity.Prompter;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 
 import static org.codehaus.plexus.util.StringUtils.*;
@@ -489,6 +487,10 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         executeGitCommand("reset", "--hard", "--quiet", "@{upstream}");
     }
 
+    private void deleteRemoteBranch(final String branchName)throws MojoFailureException, CommandLineException{
+        executeGitCommand("push", "origin", ":" + branchName);
+    }
+
     /**
      * Executes git branch -d.
      * 
@@ -502,7 +504,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Deleting '" + branchName + "' branch and remote");
 
         executeGitCommand("branch", "-d", branchName);
-        executeGitCommand("push", "origin", " :" + branchName);
+        deleteRemoteBranch(branchName);
     }
 
     /**
@@ -518,7 +520,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Deleting (-D) '" + branchName + "' branch and remote");
 
         executeGitCommand("branch", "-D", branchName);
-        executeGitCommand("push", "origin", ":" + branchName);
+        deleteRemoteBranch(branchName);
     }
 
     /**
