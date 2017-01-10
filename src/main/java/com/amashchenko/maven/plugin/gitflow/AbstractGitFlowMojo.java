@@ -412,7 +412,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitCommit(final String message) throws MojoFailureException,
             CommandLineException {
         getLog().info("Committing changes.");
-        executeGitCommand("commit", "-a", "-m", message);
+        executeGitCommand("commit", "-a", "-m", "--quiet", message);
     }
 
     /**
