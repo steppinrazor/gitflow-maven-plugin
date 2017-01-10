@@ -126,7 +126,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
             }catch(MojoFailureException | CommandLineException e){
                 getLog().error("Error occured with merging to " + gitFlowConfig.getProductionBranch()  + ", resetting hotfix to HEAD");
                 gitCheckout(hotfixBranchName);
-                gitHardResetToHead(hotfixBranchName);
+                gitHardResetToHead(gitFlowConfig.getOrigin(), hotfixBranchName);
                 gitCheckout(gitFlowConfig.getProductionBranch());
                 throw e;
             }
@@ -147,7 +147,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 }catch (MojoFailureException | CommandLineException e){
                     getLog().error("Error occured with merging to " + releaseBranch  + ", resetting hotfix to HEAD");
                     gitCheckout(hotfixBranchName);
-                    gitHardResetToHead(hotfixBranchName);
+                    gitHardResetToHead(gitFlowConfig.getOrigin(), hotfixBranchName);
                     gitCheckout(releaseBranch);
                     throw e;
                 }
