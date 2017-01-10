@@ -412,7 +412,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     protected void gitCommit(final String message) throws MojoFailureException,
             CommandLineException {
         getLog().info("Committing changes.");
-        executeGitCommand("commit", "-a", "-m", "--quiet", message);
+        executeGitCommand("commit", "-a", "-m", message);
     }
 
     /**
@@ -487,7 +487,6 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Resetting (hard) branch " + branchName + " to HEAD");
         executeGitCommand("fetch", origin);
         executeGitCommand("reset", "--hard", "--quiet", "@{upstream}");
-        executeGitCommand("clean", "--quiet", "-dfx");
     }
 
     /**
