@@ -518,7 +518,7 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
         getLog().info("Deleting (-D) '" + branchName + "' branch and remote");
 
         executeGitCommand("branch", "-D", branchName);
-        executeGitCommand("push", "origin", " :" + branchName);
+        executeGitCommand("push", "origin", ":" + branchName);
     }
 
     /**

@@ -124,10 +124,7 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                 gitMergeNoff(hotfixBranchName);
                 gitCommit(hotfixBranchName);
             }catch(MojoFailureException | CommandLineException e){
-                getLog().error("Error occured with merging to " + gitFlowConfig.getProductionBranch()  + ", resetting hotfix to HEAD");
-                gitCheckout(hotfixBranchName);
-                gitHardResetToHead(gitFlowConfig.getOrigin(), hotfixBranchName);
-                gitCheckout(gitFlowConfig.getProductionBranch());
+                getLog().error("Error occured with merging '" + hotfixBranchName + "' into '" + gitFlowConfig.getProductionBranch() + "'");
                 throw e;
             }
 
@@ -145,15 +142,10 @@ public class GitFlowHotfixFinishMojo extends AbstractGitFlowMojo {
                     gitMergeNoff(hotfixBranchName);
                     gitCommit(hotfixBranchName);
                 }catch (MojoFailureException | CommandLineException e){
-                    getLog().error("Error occured with merging to " + releaseBranch  + ", resetting hotfix to HEAD");
-                    gitCheckout(hotfixBranchName);
-                    gitHardResetToHead(gitFlowConfig.getOrigin(), hotfixBranchName);
-                    gitCheckout(releaseBranch);
+                    getLog().error("Error occured with merging '" + hotfixBranchName + "' into '" + releaseBranch + "'");
                     throw e;
                 }
             }
-
-            gitCommit(commitMessages.getHotfixFinishMessage());
 
             if (!keepBranch) {
                 gitBranchDeleteForce(hotfixBranchName);
