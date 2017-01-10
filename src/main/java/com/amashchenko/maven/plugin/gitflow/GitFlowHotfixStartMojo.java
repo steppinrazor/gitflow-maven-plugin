@@ -97,8 +97,7 @@ public class GitFlowHotfixStartMojo extends AbstractGitFlowMojo {
             }
 
             if (defaultVersion == null) {
-                throw new MojoFailureException(
-                        "Cannot get default project version.");
+                throw new MojoFailureException("Cannot get default project version.");
             }
 
             String version = null;

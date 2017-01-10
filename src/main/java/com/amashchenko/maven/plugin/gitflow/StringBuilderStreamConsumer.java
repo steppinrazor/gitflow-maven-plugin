@@ -21,10 +21,8 @@ import static java.lang.System.lineSeparator;
 import static java.lang.System.out;
 
 public final class StringBuilderStreamConsumer implements StreamConsumer {
-    private static final String TAG = "[GITFLOW] ";
-
+    private static final String TAG = "$> ";
     private final StringBuilder builder = new StringBuilder();
-
     private final boolean printOut;
 
     public StringBuilderStreamConsumer() {
