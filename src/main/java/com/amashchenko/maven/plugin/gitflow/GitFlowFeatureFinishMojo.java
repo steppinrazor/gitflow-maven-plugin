@@ -56,10 +56,19 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
     @Parameter(property = "featureSquash", defaultValue = "false")
     private boolean featureSquash = false;
 
+    /**
+     * Whether to fast-forward the feature branch if previously you ran <code>rebase -i</code> onto <code>develop</code> or <code>master</code>
+     */
+    @Parameter(property = "ffwdFeature", defaultValue = "false")
+    private boolean ffwdFeature = false;
+
     /** {@inheritDoc} */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
+            if(featureSquash && ffwdFeature)
+                throw new MojoExecutionException("'featureSquash' and 'ffwdFeature' cannot both be set to true.");
+
             // check uncommitted changes
             checkUncommittedChanges();
 
@@ -119,10 +128,12 @@ public class GitFlowFeatureFinishMojo extends AbstractGitFlowMojo {
             // git checkout develop
             gitCheckout(gitFlowConfig.getDevelopmentBranch());
 
-            if (featureSquash) {
+            if (featureSquash && !ffwdFeature) {
                 // git merge --squash feature/...
                 gitMergeSquash(featureBranchName);
                 gitCommit(featureBranchName);
+            } else if(ffwdFeature){
+                gitMergeFf(featureBranchName);
             } else {
                 // git merge --no-ff feature/...
                 gitMergeNoff(featureBranchName);

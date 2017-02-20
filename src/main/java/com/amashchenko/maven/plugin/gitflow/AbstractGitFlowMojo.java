@@ -486,6 +486,20 @@ public abstract class AbstractGitFlowMojo extends AbstractMojo {
     }
 
     /**
+     * Executes <coded>git merge --ff-only</coded>&#59; use the option to notify the user that fast-forward merge cannot
+     * be executed as expected.
+     *
+     * @param branchName
+     *            Branch name to merge.
+     * @throws MojoFailureException
+     * @throws CommandLineException
+     */
+    protected void gitMergeFf(final String branchName)
+            throws MojoFailureException, CommandLineException {
+        gitMerge(branchName, false, false, true);
+    }
+
+    /**
      * Executes git merge --squash.
      * 
      * @param branchName
